@@ -3,15 +3,13 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-// import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Клас BasicDataOperationUsingSet надає методи для виконання основних операцiй з даними типу LocalDateTime.
+ * Клас BasicDataOperationUsingSet надає методи для виконання основних операцiй з даними типу String.
  * 
  * <p>Цей клас зчитує данi з файлу "list/LocalDateTime.data", сортує їх та виконує пошук значення в масивi та множинi.</p>
  * 
@@ -19,11 +17,9 @@ import java.util.Set;
  * <ul>
  *   <li>{@link #main(String[])} - Точка входу в програму.</li>
  *   <li>{@link #doDataOperation()} - Виконує основнi операцiї з даними.</li>
- *   <li>{@link #sortArray()} - Сортує масив LocalDateTime.</li>
- *   <li>{@link #searchArray()} - Виконує пошук значення в масивi LocalDateTime.</li>
- *   <li>{@link #findMinAndMaxInArray()} - Знаходить мiнiмальне та максимальне значення в масивi LocalDateTime.</li>
- *   <li>{@link #searchSet()} - Виконує пошук значення в множинi LocalDateTime.</li>
- *   <li>{@link #findMinAndMaxInSet()} - Знаходить мiнiмальне та максимальне значення в множинi LocalDateTime.</li>
+ *   <li>{@link #sortSet()} - Сортує множину за допомогою потоків.</li>
+ *   <li>{@link #searchInSet()} - Пошук конкретного значення в множині.</li>
+ *   <li>{@link #findMinAndMaxInSet()} - Знаходить мiнiмальне і максимальне значення в множині.</li>
  *   <li>{@link #compareArrayAndSet()} - Порiвнює елементи масиву та множини.</li>
  * </ul>
  * 
@@ -39,9 +35,9 @@ import java.util.Set;
  * 
  * <p>Змiннi екземпляра:</p>
  * <ul>
- *   <li>{@link #StringValueToSearch} - Значення LocalDateTime для пошуку.</li>
- *   <li>{@link #StringValueArray} - Масив LocalDateTime.</li>
- *   <li>{@link #StringValueSet} - Множина LocalDateTime.</li>
+ *   <li>{@link #StringValueToSearch} - Значення String для пошуку.</li>
+ *   <li>{@link #StringValueArray} - Масив String.</li>
+ *   <li>{@link #StringValueSet} - Множина String.</li>
  * </ul>
  * 
  * <p>Приклад використання:</p>
@@ -82,203 +78,145 @@ public class BasicDataOperationUsingSet {
     /**
      * Виконує основнi операцiї з даними.
      * 
-     * Метод зчитує масив та множину об'єктiв LocalDateTime з файлу, сортує їх та виконує пошук значення.
+     * Метод зчитує масив та множину об'єктiв String з файлу, сортує їх та виконує пошук значення.
      */
     private void doDataOperation() {
-        // операцiї з масивом дати та часу
-        searchArray();
-        findMinAndMaxInArray();
-
-        sortArray();
-
-        searchArray();
-        findMinAndMaxInArray();
-
-        // операцiї з HashSet дати та часу
-        searchSet();
+        // операцiї з масивом даних
+        searchInSet();
         findMinAndMaxInSet();
+
+        sortSet();
+
+        searchInSet();
+        findMinAndMaxInSet();
+
+        // порiвняння масиву та множини
         compareArrayAndSet();
 
-        // записати вiдсортований масив в окремий файл
-        Utils.writeArrayToFile(StringValueArray, PATH_TO_DATA_FILE + ".sorted");
+        // записати вiдсортовану множину в окремий файл
+        Utils.writeSetToFile(StringValueSet, PATH_TO_DATA_FILE + ".sorted");
     }
 
     /**
-     * Сортує масив об'єктiв LocalDateTime та виводить початковий i вiдсортований масиви.
-     * Вимiрює та виводить час, витрачений на сортування масиву в наносекундах.
+     * Сортує множину String за допомогою потоків.
+     * Вимiрює та виводить час, витрачений на сортування множини в наносекундах.
      */
-    private void sortArray() {
+    private void sortSet() {
         long startTime = System.nanoTime();
 
-        Arrays.sort(StringValueArray);
+        StringValueSet = StringValueSet.stream()
+                                       .sorted()
+                                       .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        Utils.printOperationDuration(startTime, "сортування масиву дати i часу");
+        Utils.printOperationDuration(startTime, "сортування множини даних");
     }
 
     /**
-     * Метод для пошуку значення в масивi дати i часу.
+     * Пошук конкретного значення в множині за допомогою потоків.
      */
-    private void searchArray() {
+    private void searchInSet() {
         long startTime = System.nanoTime();
 
-        int index = Arrays.binarySearch(this.StringValueArray, StringValueToSearch);
+        boolean isFound = StringValueSet.stream()
+                                       .anyMatch(value -> value.equals(StringValueToSearch));
 
-        Utils.printOperationDuration(startTime, "пошук в масивi дати i часу");
-
-        if (index >= 0) {
-            System.out.println("Значення '" + StringValueToSearch + "' знайдено в масивi за iндексом: " + index);
-        } else {
-            System.out.println("Значення '" + StringValueToSearch + "' в масивi не знайдено.");
-        }
-    }
-
-    /**
-     * Знаходить мiнiмальне та максимальне значення в масивi LocalDateTime.
-     */
-    private void findMinAndMaxInArray() {
-        if (StringValueArray == null || StringValueArray.length == 0) {
-            System.out.println("Масив порожнiй або не iнiцiалiзований.");
-            return;
-        }
-
-        long startTime = System.nanoTime();
-
-        String min = StringValueArray[0];
-        String max = StringValueArray[0];
-
-
-        for (String StringValue : StringValueArray) {
-            if (StringValue.compareTo(min) < 0) {
-                min = StringValue;
-            }
-            if (StringValue.compareTo(max) > 0) {
-                max = StringValue;
-            }
-        }
-
-        Utils.printOperationDuration(startTime, "пошук мiнiмальної i максимальної дати i часу в масивi");
-        
-        System.out.println("Мiнiмальне значення в масивi: " + min);
-        System.out.println("Максимальне значення в масивi: " + max);
-    }
-
-    /**
-     * Метод для пошуку значення в множинi дати i часу.
-     */
-    private void searchSet() {
-        long startTime = System.nanoTime();
-
-        boolean isFound = this.StringValueSet.contains(StringValueToSearch);
-
-        Utils.printOperationDuration(startTime, "пошук в HashSet дати i часу");
+        Utils.printOperationDuration(startTime, "пошук в множині даних");
 
         if (isFound) {
-            System.out.println("Значення '" + StringValueToSearch + "' знайдено в HashSet");
+            System.out.println("Значення '" + StringValueToSearch + "' знайдено в множині.");
         } else {
-            System.out.println("Значення '" + StringValueToSearch + "' в HashSet не знайдено.");
+            System.out.println("Значення '" + StringValueToSearch + "' в множині не знайдено.");
         }
     }
 
     /**
-     * Знаходить мiнiмальне та максимальне значення в множинi LocalDateTime.
+     * Пошук мiнiмального та максимального значення в множині за допомогою потоків.
      */
     private void findMinAndMaxInSet() {
         if (StringValueSet == null || StringValueSet.isEmpty()) {
-            System.out.println("HashSet порожнiй або не iнiцiалiзований.");
+            System.out.println("Множина порожня або не iнiцiалiзована.");
             return;
         }
 
         long startTime = System.nanoTime();
 
-        String min = Collections.min(StringValueSet);
-        String max = Collections.max(StringValueSet);
+        Optional<String> min = StringValueSet.stream().min(String::compareTo);
+        Optional<String> max = StringValueSet.stream().max(String::compareTo);
 
-        Utils.printOperationDuration(startTime, "пошук мiнiмальної i максимальної дати i часу в HashSet");
+        Utils.printOperationDuration(startTime, "пошук мiнiмального i максимального значення в множині");
 
-        System.out.println("Мiнiмальне значення в HashSet: " + min);
-        System.out.println("Максимальне значення в HashSet: " + max);
+        min.ifPresent(value -> System.out.println("Мiнiмальне значення в множині: " + value));
+        max.ifPresent(value -> System.out.println("Максимальне значення в множині: " + value));
     }
 
     /**
-     * Порiвнює елементи масиву та множини.
+     * Метод для порiвняння елементів масиву та множини.
      */
     private void compareArrayAndSet() {
         System.out.println("Кiлькiсть елементiв в масивi: " + StringValueArray.length);
-        System.out.println("Кiлькiсть елементiв в HashSet: " + StringValueSet.size());
+        System.out.println("Кiлькiсть елементiв в множині: " + StringValueSet.size());
 
-        boolean allElementsMatch = true;
-        for (String StringValue : StringValueArray) {
-            if (!StringValueSet.contains(StringValue)) {
-                allElementsMatch = false;
-                break;
-            }
-        }
+        boolean allElementsMatch = Arrays.stream(StringValueArray)
+                                         .allMatch(StringValueSet::contains);
 
         if (allElementsMatch) {
-            System.out.println("Всi елементи масиву присутнi в HashSet.");
+            System.out.println("Усi елементи масиву присутнi в множині.");
         } else {
-            System.out.println("Не всi елементи масиву присутнi в HashSet.");
+            System.out.println("Не всi елементи масиву присутнi в множині.");
         }
     }
 }
 
 /**
- * Клас Utils мiститить допомiжнi методи для роботи з даними типу LocalDateTime.
+ * Клас з допомiжними методами для роботи з масивами та виведення результатiв.
  */
 class Utils {
-    /**
-     * Виводить час виконання операцiї в наносекундах.
-     * 
-     * @param startTime Час початку операцiї в наносекундах.
-     * @param operationName Назва операцiї.
-     */
-    static void printOperationDuration(long startTime, String operationName) {
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime);
-        System.out.println("\n>>>>>>>>>> Час виконання операцiї '" + operationName + "': " + duration + " наносекунд");
-    }
 
     /**
-     * Зчитує масив об'єктiв LocalDateTime з файлу.
-     * 
+     * Зчитує масив об'єктiв String з файлу, використовуючи потоки та лямбда-вирази.
+     *
      * @param pathToFile Шлях до файлу з даними.
-     * @return Масив об'єктiв LocalDateTime.
+     * @return Масив об'єктiв String.
      */
     static String[] readArrayFromFile(String pathToFile) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-        String[] tempArray = new String[1000];
-        int index = 0;
+        try {
+            List<String> lines = Files.lines(Paths.get(pathToFile)) // Зчитуємо всі рядки з файлу за допомогою потоків
+                .map(String::trim) // Обрізаємо зайві пробіли
+                .collect(Collectors.toList()); // Перетворюємо потік у список
 
-        try (BufferedReader br = new BufferedReader(new FileReader(pathToFile))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                tempArray[index++] = line.trim(); 
-            }
+            return lines.toArray(new String[0]); // Перетворюємо список у масив
         } catch (IOException e) {
             e.printStackTrace();
+            return new String[0]; // Якщо сталася помилка, повертаємо порожній масив
         }
-        
-
-        String[] finalArray = new String[index];
-        System.arraycopy(tempArray, 0, finalArray, 0, index);
-
-        return finalArray;
     }
 
     /**
-     * Записує масив об'єктiв LocalDateTime у файл.
-     * 
-     * @param StringValueArray Масив об'єктiв LocalDateTime.
-     * @param pathToFile Шлях до файлу для запису.
+     * Записує множину в файл.
+     *
+     * @param set Множина, яку треба записати.
+     * @param path Шлях до файлу.
      */
-    static void writeArrayToFile(String[] StringValueArray, String pathToFile) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathToFile))) {
-            for (String StringValue : StringValueArray) {
-                writer.write(StringValue.toString());
+    static void writeSetToFile(Set<String> set, String path) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            for (String str : set) {
+                writer.write(str);
                 writer.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Виводить час, витрачений на виконання операції.
+     *
+     * @param startTime Час початку операції.
+     * @param operationName Назва операції.
+     */
+    static void printOperationDuration(long startTime, String operationName) {
+        long duration = System.nanoTime() - startTime;
+        System.out.println(operationName + " виконано за " + duration + " наносекунд.");
+    }
 }
+

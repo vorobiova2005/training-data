@@ -8,45 +8,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Клас BasicDataOperationUsingSet надає методи для виконання основних операцiй з даними типу String.
- * 
- * <p>Цей клас зчитує данi з файлу "list/LocalDateTime.data", сортує їх та виконує пошук значення в масивi та множинi.</p>
- * 
- * <p>Основнi методи:</p>
- * <ul>
- *   <li>{@link #main(String[])} - Точка входу в програму.</li>
- *   <li>{@link #doDataOperation()} - Виконує основнi операцiї з даними.</li>
- *   <li>{@link #sortSet()} - Сортує множину за допомогою потоків.</li>
- *   <li>{@link #searchInSet()} - Пошук конкретного значення в множині.</li>
- *   <li>{@link #findMinAndMaxInSet()} - Знаходить мiнiмальне і максимальне значення в множині.</li>
- *   <li>{@link #compareArrayAndSet()} - Порiвнює елементи масиву та множини.</li>
- * </ul>
- * 
- * <p>Конструктор:</p>
- * <ul>
- *   <li>{@link #BasicDataOperationUsingSet(String[])} - iнiцiалiзує об'єкт з значенням для пошуку.</li>
- * </ul>
- * 
- * <p>Константи:</p>
- * <ul>
- *   <li>{@link #PATH_TO_DATA_FILE} - Шлях до файлу з даними.</li>
- * </ul>
- * 
- * <p>Змiннi екземпляра:</p>
- * <ul>
- *   <li>{@link #StringValueToSearch} - Значення String для пошуку.</li>
- *   <li>{@link #StringValueArray} - Масив String.</li>
- *   <li>{@link #StringValueSet} - Множина String.</li>
- * </ul>
- * 
- * <p>Приклад використання:</p>
- * <pre>
- * {@code
- * java BasicDataOperationUsingSet "2024-03-16T00:12:38Z"
- * }
- * </pre>
- */
 public class BasicDataOperationUsingSet {
     static final String PATH_TO_DATA_FILE = "list/String.data";
 
@@ -59,11 +20,6 @@ public class BasicDataOperationUsingSet {
         basicDataOperationUsingSet.doDataOperation();
     }
 
-    /**
-     * Конструктор, який iнiцiалiзує об'єкт з значенням для пошуку.
-     * 
-     * @param args Аргументи командного рядка, де перший аргумент - значення для пошуку.
-     */
     BasicDataOperationUsingSet(String[] args) {
         if (args.length == 0) {
             throw new RuntimeException("Вiдсутнє значення для пошуку");
@@ -75,20 +31,15 @@ public class BasicDataOperationUsingSet {
         StringValueSet = new HashSet<>(Arrays.asList(StringValueArray));
     }
 
-    /**
-     * Виконує основнi операцiї з даними.
-     * 
-     * Метод зчитує масив та множину об'єктiв String з файлу, сортує їх та виконує пошук значення.
-     */
     private void doDataOperation() {
         // операцiї з масивом даних
-        searchInSet();
-        findMinAndMaxInSet();
+        searchArray();
+        findMinAndMaxInArray();
 
-        sortSet();
+        sortArray();
 
-        searchInSet();
-        findMinAndMaxInSet();
+        searchArray();
+        findMinAndMaxInArray();
 
         // порiвняння масиву та множини
         compareArrayAndSet();
@@ -98,17 +49,56 @@ public class BasicDataOperationUsingSet {
     }
 
     /**
-     * Сортує множину String за допомогою потоків.
-     * Вимiрює та виводить час, витрачений на сортування множини в наносекундах.
+     * Сортує масив String за допомогою потоків.
+     * Вимiрює та виводить час, витрачений на сортування масиву в наносекундах.
      */
-    private void sortSet() {
+    private void sortArray() {
         long startTime = System.nanoTime();
 
-        StringValueSet = StringValueSet.stream()
-                                       .sorted()
-                                       .collect(Collectors.toCollection(LinkedHashSet::new));
+        // Сортування масиву з використанням потоків
+        StringValueArray = Arrays.stream(StringValueArray)
+                                 .sorted()
+                                 .toArray(String[]::new);
 
-        Utils.printOperationDuration(startTime, "сортування множини даних");
+        Utils.printOperationDuration(startTime, "сортування масиву даних");
+    }
+
+    /**
+     * Пошук конкретного значення в масиві за допомогою потоків.
+     */
+    private void searchArray() {
+        long startTime = System.nanoTime();
+
+        boolean isFound = Arrays.stream(StringValueArray)
+                                .anyMatch(value -> value.equals(StringValueToSearch));
+
+        Utils.printOperationDuration(startTime, "пошук в масиві даних");
+
+        if (isFound) {
+            System.out.println("Значення '" + StringValueToSearch + "' знайдено в масиві.");
+        } else {
+            System.out.println("Значення '" + StringValueToSearch + "' в масиві не знайдено.");
+        }
+    }
+
+    /**
+     * Пошук мiнiмального та максимального значення в масиві за допомогою потоків.
+     */
+    private void findMinAndMaxInArray() {
+        if (StringValueArray == null || StringValueArray.length == 0) {
+            System.out.println("Масив порожній або не ініціалізований.");
+            return;
+        }
+
+        long startTime = System.nanoTime();
+
+        Optional<String> min = Arrays.stream(StringValueArray).min(String::compareTo);
+        Optional<String> max = Arrays.stream(StringValueArray).max(String::compareTo);
+
+        Utils.printOperationDuration(startTime, "пошук мiнiмального i максимального значення в масиві");
+
+        min.ifPresent(value -> System.out.println("Мiнiмальне значення в масиві: " + value));
+        max.ifPresent(value -> System.out.println("Максимальне значення в масиві: " + value));
     }
 
     /**
@@ -150,6 +140,20 @@ public class BasicDataOperationUsingSet {
     }
 
     /**
+     * Сортує множину String за допомогою потоків.
+     * Вимiрює та виводить час, витрачений на сортування множини в наносекундах.
+     */
+    private void sortSet() {
+        long startTime = System.nanoTime();
+
+        StringValueSet = StringValueSet.stream()
+                                       .sorted()
+                                       .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Utils.printOperationDuration(startTime, "сортування множини даних");
+    }
+
+    /**
      * Метод для порiвняння елементів масиву та множини.
      */
     private void compareArrayAndSet() {
@@ -180,14 +184,14 @@ class Utils {
      */
     static String[] readArrayFromFile(String pathToFile) {
         try {
-            List<String> lines = Files.lines(Paths.get(pathToFile)) // Зчитуємо всі рядки з файлу за допомогою потоків
-                .map(String::trim) // Обрізаємо зайві пробіли
-                .collect(Collectors.toList()); // Перетворюємо потік у список
+            List<String> lines = Files.lines(Paths.get(pathToFile))
+                .map(String::trim)
+                .collect(Collectors.toList());
 
-            return lines.toArray(new String[0]); // Перетворюємо список у масив
+            return lines.toArray(new String[0]);
         } catch (IOException e) {
             e.printStackTrace();
-            return new String[0]; // Якщо сталася помилка, повертаємо порожній масив
+            return new String[0];
         }
     }
 
@@ -219,4 +223,3 @@ class Utils {
         System.out.println(operationName + " виконано за " + duration + " наносекунд.");
     }
 }
-
